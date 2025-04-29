@@ -15,7 +15,7 @@ def run_save_and_load_model():
     subprocess.run(["python", test_load_path])
     
 scheduler = BlockingScheduler()
-scheduler.add_job(run_save_and_load_model, 'interval', minutes=10)
+scheduler.add_job(run_save_and_load_model, 'interval', minutes=30)
 
 print("Scheduler started. Running every 10 minutes...")
 scheduler.start()
