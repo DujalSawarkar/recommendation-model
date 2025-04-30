@@ -17,5 +17,5 @@ def run_save_and_load_model():
 scheduler = BlockingScheduler()
 scheduler.add_job(run_save_and_load_model, 'interval', minutes=30)
 
-print("Scheduler started. Running every 10 minutes...")
+print("Scheduler started. Running every 30 minutes...")
 scheduler.start()
