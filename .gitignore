@@ -1,0 +1,5 @@
+myenv310/
+venv310/
+.env
+.cls
+env*

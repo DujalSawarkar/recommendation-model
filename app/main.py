@@ -6,6 +6,7 @@ from fastapi import FastAPI, Query
 import logging
 import tempfile
 import shutil
+from fastapi.middleware.cors import CORSMiddleware
 
 # import scripts.scheduler
 # from scripts.scheduler import run_save_and_load_model
@@ -28,6 +29,13 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Or specify a list of allowed frontend domains
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://anushka_ml_team:Vk1818@champhuntindia.nmjhc.mongodb.net/")
 # S3_BUCKET = os.getenv("S3_BUCKET", "ml-model-recommendation")

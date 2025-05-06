@@ -5,12 +5,13 @@ import os
 import logging
 import sys
 from pymongo import MongoClient
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.decomposition import TruncatedSVD
 import cloudpickle as pickle
-import boto3
+# import boto3
+# import shutil
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -32,10 +33,13 @@ def fetch_data():
     print("fetch_data data..+++.")
     client = MongoClient(MONGO_URI)
     db = client['champhunt_feeds']
-    three_months_ago = datetime.now(UTC) - timedelta(days=90)
+    print("reached db champhunt_feeds")
+    three_months_ago = datetime.now(timezone.utc) - timedelta(days=90)
     posts_data = list(db['feeds'].find({"createdDate": {"$gte": three_months_ago}}))
+    print("reached db feeds")
     db = client['champhunt']
     users_data = list(db['users'].find({}))
+    print("reached db users")
     views_data = list(db['userinteractions'].find({}))
     print("By Byefetch_data data..+++.")
     return posts_data, users_data, views_data
@@ -116,13 +120,31 @@ def save_and_upload_model():
     recommender = PostRecommender(post_vectors, posts_df, interaction_matrix, user_factors, users_df, views_exploded)
     
     os.makedirs("models", exist_ok=True)
-    local_path = os.path.join("models", "recommendation_model.pkl")  # Updated to match S3_KEY
+    # Updated to match S3_KEY
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    local_path = os.path.join(project_root, "models", "recommendation_model.pkl")
+
     logger.info(f"Saving model to {local_path}...")
     with open(local_path, "wb") as file:
         pickle.dump(recommender, file)
     file_size = os.path.getsize(local_path) / 1e9
     logger.info(f"Model saved locally to {local_path} (size: {file_size:.2f} GB)")
+
+    import shutil
+
+    # After saving to models/recommendation_model.pkl
+    temp_dir = os.path.join(project_root, "TEMP_DIR")
+    os.makedirs(temp_dir, exist_ok=True)
     
+    temp_model_path = os.path.join(temp_dir, "recommendation_model.pkl")
+    
+    # Clean old model if it exists
+    if os.path.exists(temp_model_path):
+        os.remove(temp_model_path)
+    
+    # Copy to TEMP_DIR
+    shutil.copy2(local_path, temp_model_path)
+
     # s3_client = boto3.client(
     #     "s3",
     #     aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
